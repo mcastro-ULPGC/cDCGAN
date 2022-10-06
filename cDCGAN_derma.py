@@ -24,7 +24,7 @@ learning_rate = 0.0002
 betas = (0.5, 0.999)
 batch_size = 128
 num_epochs = 20
-data_dir = r'..\Data\ham10000'
+data_dir = r'..\Data\ham10000\1'
 save_dir = r'cDCGAN_derma_results'
 
 # CelebA dataset
