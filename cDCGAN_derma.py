@@ -26,6 +26,7 @@ batch_size = 128
 num_epochs = 20
 data_dir = r'..\Data\ham10000'
 save_dir = r'cDCGAN_derma_results'
+labels_pkl = 'hair_label.pkl'
 
 # CelebA dataset
 transform = transforms.Compose([transforms.Resize((image_size,image_size)),
@@ -341,12 +342,12 @@ criterion = torch.nn.BCELoss()
 G_optimizer = torch.optim.Adam(G.parameters(), lr=learning_rate, betas=betas)
 D_optimizer = torch.optim.Adam(D.parameters(), lr=learning_rate, betas=betas)
 
-# Load gender labels
+# Load labels
 # with open('../Data/celebA_data/gender_label.pkl', 'rb') as fp:
 #     gender = pickle.load(fp)
 # gender = torch.LongTensor(gender).squeeze()
 # Load hair color labels
-with open('../Data/celebA_data/hair_label.pkl', 'rb') as fp:
+with open(labels_pkl, 'rb') as fp:
     label = pickle.load(fp)
 label = torch.LongTensor(label).squeeze()
 
@@ -435,15 +436,15 @@ for epoch in range(num_epochs):
         G_optimizer.step()
 
         # loss values
-        D_losses.append(D_loss.data[0])
-        G_losses.append(G_loss.data[0])
+        D_losses.append(D_loss.data) # D_loss.data[0] if torch <0.5
+        G_losses.append(G_loss.data) # G_loss.data[0] if torch <0.5
 
         print('Epoch [%d/%d], Step [%d/%d], D_loss: %.4f, G_loss: %.4f'
-              % (epoch+1, num_epochs, i+1, len(data_loader), D_loss.data[0], G_loss.data[0]))
+              % (epoch+1, num_epochs, i+1, len(data_loader), D_loss.data, G_loss.data))
 
         # ============ TensorBoard logging ============#
-        D_logger.scalar_summary('losses', D_loss.data[0], step + 1)
-        G_logger.scalar_summary('losses', G_loss.data[0], step + 1)
+        D_logger.scalar_summary('losses', D_loss.data, step + 1)
+        G_logger.scalar_summary('losses', G_loss.data, step + 1)
         step += 1
 
     D_avg_loss = torch.mean(torch.FloatTensor(D_losses))
