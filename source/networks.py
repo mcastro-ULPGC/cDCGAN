@@ -18,7 +18,7 @@ def weights_init(m):
 class Generator(nn.Module):
     def __init__(self, ngpu):
         super(Generator, self).__init__()
-        n_hidden_layers = np.log2(ngf).astype(int) - 3 # image_size >= 2**2
+        n_hidden_layers = np.log2(image_size).astype(int) - 3 # image_size >= 2**2
         layers = []
         keys = [] 
         for i in reversed(range(n_hidden_layers)):
@@ -59,7 +59,7 @@ def set_Generator(ngpu,device,show=False):
 class Discriminator(nn.Module):
     def __init__(self, ngpu):
         super(Discriminator, self).__init__()
-        n_hidden_layers = np.log2(ndf).astype(int) - 3 # image_size >= 2**2
+        n_hidden_layers = np.log2(image_size).astype(int) - 3 # image_size >= 2**2
         layers = []
         keys = [] 
         for i in range(n_hidden_layers):
