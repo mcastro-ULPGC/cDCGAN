@@ -23,17 +23,18 @@ class Generator(nn.Module):
         keys = [] 
         for i in reversed(range(n_hidden_layers)):
             layers.append(nn.ConvTranspose2d(ngf * 2 ** (i + 1), ngf * 2 ** i, 4, 2, 1, bias=False))
+#            layers.append(nn.Dropout(0.5)) #TIP (not sure of including it)
             layers.append(nn.BatchNorm2d(ngf * 2 ** i))
-            layers.append(nn.ReLU(inplace=True))
+            layers.append(nn.LeakyReLU(0.2,inplace=True))
             keys.append('convtr2d'+str(n_hidden_layers - i))
             keys.append('bn'+str(n_hidden_layers - i))
-            keys.append('relu'+str(n_hidden_layers - i))
+            keys.append('lrelu'+str(n_hidden_layers - i))
         self.ngpu = ngpu
         self.main = nn.Sequential(
             # first layer
             nn.ConvTranspose2d(nz, ngf * 2 ** n_hidden_layers, 4, 1, bias=False),
             nn.BatchNorm2d(ngf * 2 ** n_hidden_layers),
-            nn.ReLU(inplace=True),
+            nn.LeakyReLU(0.2,inplace=True),
             # hidden layers
             nn.Sequential(OrderedDict(dict(zip(keys, layers)))),
             # last layer
@@ -68,7 +69,7 @@ class Discriminator(nn.Module):
             layers.append(nn.LeakyReLU(0.2, inplace=True))
             keys.append('conv'+str(i))
             keys.append('bn'+str(i))
-            keys.append('relu'+str(i))
+            keys.append('lrelu'+str(i))
         self.ngpu = ngpu
         self.main = nn.Sequential(
             # first layer
@@ -106,14 +107,16 @@ def set_GAN_loss():
     # Create batch of latent vectors that we will use to visualize the progression of the generator
     fixed_noise = torch.randn(image_size, nz, 1, 1, device=device) # image_size = 64 ??
     # Establish convention for real and fake labels during training
-    real_label = 1.
-    fake_label = 0.
+    # NEW: SOFT LABELS
+    real_label = 0.75 + torch.randn(1,device=device) * 0.5
+    fake_label = 0.00 + torch.randn(1,device=device) * 0.3
     return criterion, fixed_noise, real_label, fake_label
 
 def set_GAN_optimizer(netG,netD):
     # Setup Adam optimizers for both G and D
     optimizerD = optim.Adam(netD.parameters(), lr=lr, betas=(beta1, 0.999))
-    optimizerG = optim.Adam(netG.parameters(), lr=lr, betas=(beta1, 0.999))
+#    optimizerG = optim.Adam(netG.parameters(), lr=lr, betas=(beta1, 0.999))
+    optimizerG = optim.SGD(netG.parameters(), lr=lr, momentum=0.9)
     return optimizerD, optimizerG
 
 def set_GAN_scheduler(optimizerD,optimizerG):
